@@ -153,7 +153,6 @@ export default function App() {
   const elapsedMinutes = currentMinute === 0 ? 1 : currentMinute;
   const projecaoHora = Math.round((processadoHora / elapsedMinutes) * 60);
 
-  // Novos cálculos solicitados
   const pacotesPorMinuto = Math.round(processadoHora / elapsedMinutes);
   const faltaParaMeta = Math.max(0, metaHora - processadoHora);
 
@@ -262,7 +261,6 @@ export default function App() {
           <div className="flex justify-between items-center border-b border-slate-100 pb-3">
             <span className="text-base font-black uppercase tracking-wider text-slate-700">Projeção Hora</span>
             <div className="flex items-center gap-3">
-              {/* Adicionada a taxa de pacotes por minuto */}
               <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200">
                 {pacotesPorMinuto.toLocaleString('pt-BR')} pct/min
               </span>
@@ -284,7 +282,12 @@ export default function App() {
         >
           <div className="flex justify-between items-center border-b border-slate-200/50 pb-3">
             <span className="text-base font-black uppercase tracking-wider text-slate-700">Processado Hora</span>
-            <Package className="w-7 h-7" style={{ color: processadoTheme.text }} />
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-white/80 text-slate-700 border border-slate-200/80 shadow-xs">
+                {faltaParaMeta > 0 ? `Falta ${faltaParaMeta.toLocaleString('pt-BR')} pct` : 'Meta batida! 🎉'}
+              </span>
+              <Package className="w-7 h-7" style={{ color: processadoTheme.text }} />
+            </div>
           </div>
           
           <div className="flex items-center justify-between my-auto gap-2">
@@ -292,22 +295,15 @@ export default function App() {
               {processadoHora.toLocaleString('pt-BR')} <span className="text-2xl lg:text-3xl font-bold text-slate-400">pacotes</span>
             </div>
             
-            <div className="flex flex-col items-end gap-1">
-              <div 
-                className="px-4 py-1.5 rounded-full font-black text-base lg:text-lg shadow-sm border whitespace-nowrap"
-                style={{ 
-                  backgroundColor: processadoTheme.tagBg, 
-                  color: processadoTheme.text,
-                  borderColor: processadoTheme.border
-                }}
-              >
-                {metaPercent.toFixed(2)}% da Meta
-              </div>
-              
-              {/* Adicionado o total de pacotes que faltam para atingir a meta */}
-              <span className="text-xs font-black px-2.5 py-0.5 rounded-md bg-white/80 text-slate-700 border border-slate-200 shadow-xs">
-                {faltaParaMeta > 0 ? `Falta ${faltaParaMeta.toLocaleString('pt-BR')} pct` : 'Meta batida! 🎉'}
-              </span>
+            <div 
+              className="px-4 py-2 rounded-full font-black text-base lg:text-lg shadow-sm border whitespace-nowrap"
+              style={{ 
+                backgroundColor: processadoTheme.tagBg, 
+                color: processadoTheme.text,
+                borderColor: processadoTheme.border
+              }}
+            >
+              {metaPercent.toFixed(2)}% da Meta
             </div>
           </div>
           
