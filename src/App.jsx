@@ -171,7 +171,7 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-xl lg:text-3xl font-black text-slate-900 tracking-tight uppercase">
-              Cockpit Esteiras - SPX ES2
+              Processamento Esteiras - SPX ES2
             </h1>
             <p className="text-slate-500 text-xs lg:text-sm font-semibold">
               Monitoramento Operacional de Produtividade em Tempo Real
