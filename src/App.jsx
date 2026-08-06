@@ -76,14 +76,14 @@ export default function App() {
     try {
       const todayDate = new Date();
       
-      // Calcula a data operacional (Ciclo das 06h00 até às 05h59 do dia seguinte)
+      // Data Operacional (Troca às 06h00 da manhã)
       const operationalDate = new Date(todayDate);
       if (todayDate.getHours() < 6) {
         operationalDate.setDate(operationalDate.getDate() - 1);
       }
       const operationalDateStr = getLocalDateString(operationalDate);
 
-      // 1. Produtividade (Filtra estritamente pela Data Operacional)
+      // 1. Produtividade
       const { data: prodData, error: prodErr } = await supabase
         .from('hourly_productivity')
         .select('*')
@@ -100,7 +100,7 @@ export default function App() {
         setRealProcessed(prodMap);
       }
 
-      // 2. Metas (Filtra estritamente pela Data Operacional)
+      // 2. Metas
       const { data: targetData, error: targetErr } = await supabase
         .from('hourly_targets')
         .select('*')
@@ -203,10 +203,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* CARDS NO LAYOUT GRID 2X2 */}
+      {/* CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto">
         
-        {/* 1. RELÓGIO & TIMER */}
+        {/* RELÓGIO & TIMER */}
         <div 
           className="bg-white border-2 rounded-2xl p-7 lg:p-8 shadow-md flex flex-col justify-between h-56 relative overflow-hidden transition-all duration-500"
           style={{ borderColor: clockTheme.border }}
@@ -241,7 +241,7 @@ export default function App() {
           </p>
         </div>
 
-        {/* 2. META HORA */}
+        {/* META HORA */}
         <div className="bg-white border-2 border-slate-200 rounded-2xl p-7 lg:p-8 shadow-md flex flex-col justify-between h-56">
           <div className="flex justify-between items-center border-b border-slate-100 pb-3">
             <span className="text-base font-black uppercase tracking-wider text-slate-700">Meta Hora</span>
@@ -253,7 +253,7 @@ export default function App() {
           <p className="text-sm text-slate-600 font-bold">Capacidade / Meta planejada para a hora vigente</p>
         </div>
 
-        {/* 3. PROJEÇÃO HORA */}
+        {/* PROJEÇÃO HORA */}
         <div className={`bg-white border-2 rounded-2xl p-7 lg:p-8 shadow-md flex flex-col justify-between h-56 transition-colors ${
           isProjecaoBoa ? 'border-emerald-400' : 'border-amber-400'
         }`}>
@@ -274,7 +274,7 @@ export default function App() {
           <p className="text-sm text-slate-600 font-bold">Ritmo estimado de entrega baseado nos {currentMinute}min decorridos</p>
         </div>
 
-        {/* 4. PROCESSADO HORA */}
+        {/* PROCESSADO HORA */}
         <div 
           className="rounded-2xl p-7 lg:p-8 shadow-md flex flex-col justify-between h-56 transition-all duration-500 border-2"
           style={{ backgroundColor: processadoTheme.bg, borderColor: processadoTheme.border }}
@@ -345,7 +345,7 @@ export default function App() {
               </tr>
             </thead>
             <tbody>
-              {/* METAS REGISTRADAS */}
+              {/* METAS */}
               <tr className="border-b border-slate-200 text-xs font-black">
                 <td className="p-2.5 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">META</td>
                 {HOURS_ORDER.map(({ hour }) => {
@@ -364,7 +364,7 @@ export default function App() {
                 })}
               </tr>
 
-              {/* PROCESSADO REAL */}
+              {/* PROCESSADO */}
               <tr className="border-b border-slate-200 text-xs font-black">
                 <td className="p-2.5 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">PROCESSADO</td>
                 {HOURS_ORDER.map(({ hour }) => {
