@@ -76,43 +76,42 @@ export default function App() {
     try {
       const todayDate = new Date();
       
+      // Calcula a data operacional (Ciclo das 06h00 até às 05h59 do dia seguinte)
       const operationalDate = new Date(todayDate);
       if (todayDate.getHours() < 6) {
         operationalDate.setDate(operationalDate.getDate() - 1);
       }
       const operationalDateStr = getLocalDateString(operationalDate);
 
-      // 1. Produtividade
+      // 1. Produtividade (Filtra estritamente pela Data Operacional)
       const { data: prodData, error: prodErr } = await supabase
         .from('hourly_productivity')
-        .select('*');
+        .select('*')
+        .eq('date', operationalDateStr);
 
       if (!prodErr && prodData) {
         const prodMap = {};
         prodData.forEach(item => {
           let itemHour = parseHourValue(item.hour);
           if (!isNaN(itemHour)) {
-            if (item.date === operationalDateStr || !item.date) {
-              prodMap[itemHour] = item.processed_volume;
-            }
+            prodMap[itemHour] = item.processed_volume;
           }
         });
         setRealProcessed(prodMap);
       }
 
-      // 2. Metas
+      // 2. Metas (Filtra estritamente pela Data Operacional)
       const { data: targetData, error: targetErr } = await supabase
         .from('hourly_targets')
-        .select('*');
+        .select('*')
+        .eq('date', operationalDateStr);
 
       if (!targetErr && targetData) {
         const targetMap = {};
         targetData.forEach(item => {
           let itemHour = parseHourValue(item.hour);
           if (!isNaN(itemHour)) {
-            if (item.date === operationalDateStr || !item.date) {
-              targetMap[itemHour] = item.target_volume;
-            }
+            targetMap[itemHour] = item.target_volume;
           }
         });
         setRealTargets(targetMap);
