@@ -7,9 +7,15 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const HOURS_ORDER = [
-  { hour: 6 }, { hour: 7 }, { hour: 8 }, { hour: 9 }, { hour: 10 }, { hour: 11 }, { hour: 12 }, { hour: 13 },
-  { hour: 14 }, { hour: 15 }, { hour: 16 }, { hour: 17 }, { hour: 18 }, { hour: 19 }, { hour: 20 }, { hour: 21 },
-  { hour: 22 }, { hour: 23 }, { hour: 0 }, { hour: 1 }, { hour: 2 }, { hour: 3 }, { hour: 4 }, { hour: 5 }
+  { hour: 6, shift: 'T1' }, { hour: 7, shift: 'T1' }, { hour: 8, shift: 'T1' }, { hour: 9, shift: 'T1' }, { hour: 10, shift: 'T1' }, { hour: 11, shift: 'T1' }, { hour: 12, shift: 'T1' }, { hour: 13, shift: 'T1' },
+  { hour: 14, shift: 'T2' }, { hour: 15, shift: 'T2' }, { hour: 16, shift: 'T2' }, { hour: 17, shift: 'T2' }, { hour: 18, shift: 'T2' }, { hour: 19, shift: 'T2' }, { hour: 20, shift: 'T2' }, { hour: 21, shift: 'T2' },
+  { hour: 22, shift: 'T3' }, { hour: 23, shift: 'T3' }, { hour: 0, shift: 'T3' }, { hour: 1, shift: 'T3' }, { hour: 2, shift: 'T3' }, { hour: 3, shift: 'T3' }, { hour: 4, shift: 'T3' }, { hour: 5, shift: 'T3' }
+];
+
+const SHIFTS = [
+  { id: 'T1', name: 'T1 (06H ÀS 13H)', hours: [6, 7, 8, 9, 10, 11, 12, 13], headerBg: 'bg-blue-50', headerText: 'text-blue-700' },
+  { id: 'T2', name: 'T2 (14H ÀS 21H)', hours: [14, 15, 16, 17, 18, 19, 20, 21], headerBg: 'bg-amber-50', headerText: 'text-amber-700' },
+  { id: 'T3', name: 'T3 (22H ÀS 05H)', hours: [22, 23, 0, 1, 2, 3, 4, 5], headerBg: 'bg-purple-50', headerText: 'text-purple-700' }
 ];
 
 function getLocalDateString(dateObj) {
@@ -76,7 +82,6 @@ export default function App() {
     try {
       const todayDate = new Date();
       
-      // Data Operacional (Troca às 06h00 da manhã)
       const operationalDate = new Date(todayDate);
       if (todayDate.getHours() < 6) {
         operationalDate.setDate(operationalDate.getDate() - 1);
@@ -158,6 +163,26 @@ export default function App() {
   const metaPercent = metaHora > 0 ? (processadoHora / metaHora) * 100 : 0;
   const processadoTheme = getPerformanceColor(metaPercent);
   const isProjecaoBoa = projecaoHora >= metaHora;
+
+  // Cálculo dos Totais por Turno
+  const getShiftTotals = (shiftHours) => {
+    let totalTarget = 0;
+    let totalProcessed = 0;
+    let hasData = false;
+
+    shiftHours.forEach(h => {
+      if (realTargets[h] !== undefined) {
+        totalTarget += realTargets[h];
+      }
+      if (realProcessed[h] !== undefined) {
+        totalProcessed += realProcessed[h];
+        hasData = true;
+      }
+    });
+
+    const percent = totalTarget > 0 ? (totalProcessed / totalTarget) * 100 : 0;
+    return { totalTarget, totalProcessed, percent, hasData };
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 p-4 lg:p-6 flex flex-col justify-between select-none gap-6">
@@ -320,11 +345,14 @@ export default function App() {
         <div className="w-full min-w-[1200px]">
           <table className="w-full text-center border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 text-xs font-black uppercase">
-                <th className="p-2.5 text-left text-slate-700 bg-slate-50 font-black w-36 min-w-[140px]">TURNO</th>
-                <th colSpan="8" className="p-2 bg-blue-50 text-blue-700 border-x border-slate-200 font-bold">T1 (06H ÀS 13H)</th>
-                <th colSpan="8" className="p-2 bg-amber-50 text-amber-700 border-x border-slate-200 font-bold">T2 (14H ÀS 21H)</th>
-                <th colSpan="8" className="p-2 bg-purple-50 text-purple-700 border-l border-slate-200 font-bold">T3 (22H ÀS 05H)</th>
+              {/* CABEÇALHO DO TURNO - AUMENTADO E EM NEGRITO EXTRA */}
+              <tr className="border-b border-slate-200 uppercase">
+                <th className="p-2.5 text-left text-slate-700 bg-slate-50 font-black text-xs w-36 min-w-[140px]">TURNO</th>
+                {SHIFTS.map(shift => (
+                  <th key={shift.id} colSpan="8" className={`p-2 border-x border-slate-200 font-black text-sm lg:text-base tracking-wide ${shift.headerBg} ${shift.headerText}`}>
+                    {shift.name}
+                  </th>
+                ))}
               </tr>
 
               <tr className="border-b border-slate-200 text-xs font-black uppercase">
@@ -406,7 +434,7 @@ export default function App() {
               </tr>
 
               {/* % REALIZADA */}
-              <tr className="text-xs font-black">
+              <tr className="border-b-2 border-slate-300 text-xs font-black">
                 <td className="p-2.5 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">% REALIZADA</td>
                 {HOURS_ORDER.map(({ hour }) => {
                   const val = realProcessed[hour];
@@ -438,6 +466,63 @@ export default function App() {
                       }`}
                     >
                       {pctStr}
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* RESUMO TOTAL DO TURNO - COM ESPAÇAMENTO REDUZIDO E CORES DE DESEMPENHO NO PROCESSADO */}
+              <tr className="bg-slate-50 text-xs font-black border-t-2 border-slate-300">
+                <td className="p-2 text-left font-black text-slate-900 bg-slate-200 uppercase tracking-wider">
+                  TOTAL TURNO
+                </td>
+                {SHIFTS.map(shift => {
+                  const { totalTarget, totalProcessed, percent, hasData } = getShiftTotals(shift.hours);
+                  const isHit = percent >= 100;
+
+                  return (
+                    <td colSpan="8" key={shift.id} className="p-2 border-x border-slate-300 bg-slate-100/80">
+                      <div className="flex items-center justify-around gap-1 px-1">
+                        
+                        {/* Meta Turno */}
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-[9px] lg:text-[10px] text-slate-500 font-bold uppercase tracking-tight">Meta Turno</span>
+                          <span className="text-slate-800 font-black text-xs lg:text-sm">{totalTarget.toLocaleString('pt-BR')}</span>
+                        </div>
+                        
+                        <div className="h-5 w-px bg-slate-300" />
+                        
+                        {/* Processado com cor dinâmica de acordo com a meta */}
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-[9px] lg:text-[10px] text-slate-500 font-bold uppercase tracking-tight">Processado</span>
+                          <span className={`font-black text-xs lg:text-sm ${
+                            hasData && totalProcessed > 0
+                              ? isHit 
+                                ? 'text-emerald-600' 
+                                : 'text-red-600'
+                              : 'text-slate-800'
+                          }`}>
+                            {totalProcessed.toLocaleString('pt-BR')}
+                          </span>
+                        </div>
+                        
+                        <div className="h-5 w-px bg-slate-300" />
+                        
+                        {/* % Realizada mantida com a caixa estilizada */}
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-[9px] lg:text-[10px] text-slate-500 font-bold uppercase tracking-tight">% Realizada</span>
+                          <span className={`text-xs font-black px-2 py-0.5 rounded-md border ${
+                            hasData 
+                              ? isHit 
+                                ? 'bg-emerald-100 text-emerald-700 border-emerald-300' 
+                                : 'bg-red-100 text-red-700 border-red-300'
+                              : 'bg-slate-200 text-slate-500 border-slate-300'
+                          }`}>
+                            {hasData ? `${percent.toFixed(2)}%` : '-'}
+                          </span>
+                        </div>
+
+                      </div>
                     </td>
                   );
                 })}
