@@ -187,8 +187,8 @@ export default function App() {
   return (
     <div className="h-screen max-h-screen overflow-hidden bg-slate-100 text-slate-800 p-3 lg:p-4 flex flex-col justify-between select-none gap-3">
       
-      {/* CABEÇALHO */}
-      <header className="flex flex-wrap gap-3 justify-between items-center bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex-shrink-0">
+      {/* CABEÇALHO COM PADDING E ALINHAMENTO PERFEITO */}
+      <header className="flex flex-wrap gap-2 justify-between items-center bg-white px-4 pt-3 pb-3.5 rounded-2xl border border-slate-200 shadow-sm shrink-0">
         <div className="flex items-center gap-3">
           <div className="bg-orange-500 text-white p-2.5 rounded-2xl shadow-md">
             <Package className="w-7 h-7" />
@@ -197,43 +197,45 @@ export default function App() {
             <h1 className="text-lg lg:text-2xl font-black text-slate-900 tracking-tight uppercase leading-tight">
               Processamento Esteiras - SPX ES2
             </h1>
-            <p className="text-slate-500 text-xs lg:text-xs font-semibold">
+            <p className="text-slate-500 text-xs font-semibold">
               Monitoramento Operacional de Produtividade em Tempo Real
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 ml-auto">
-          <div className="bg-slate-50 border border-slate-200 px-4 h-10 rounded-2xl flex items-center gap-2.5 shadow-sm">
+          {/* CARD DE DATA */}
+          <div className="bg-slate-50 border border-slate-200 px-4 h-11 rounded-2xl flex items-center gap-2 shadow-sm">
             <Calendar className="w-4 h-4 text-orange-500" />
             <span className="text-xs lg:text-sm font-black text-slate-800 tracking-wide whitespace-nowrap">
               {fullHeaderDate}
             </span>
           </div>
 
-          <div className="flex flex-col items-end justify-center">
+          {/* ÁREA DO BOTÃO ATUALIZAR + ÚLTIMA SYNC */}
+          <div className="relative flex flex-col items-center">
             <button
               onClick={fetchDashboardData}
               disabled={isLoading}
-              className="bg-orange-500 hover:bg-orange-600 active:scale-95 transition-all text-white font-black px-4 h-10 rounded-2xl shadow-md flex items-center gap-2 text-xs uppercase tracking-wider disabled:opacity-50"
+              className="bg-orange-500 hover:bg-orange-600 active:scale-95 transition-all text-white font-black px-4 h-11 rounded-2xl shadow-md flex items-center justify-center gap-2 text-xs lg:text-sm uppercase tracking-wider cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               title="Atualizar dados manualmente"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
               <span>Atualizar</span>
             </button>
-            <span className="text-[10px] font-bold text-slate-400 mt-0.5">
+            <span className="text-[10px] font-bold text-slate-400 absolute top-full left-1/2 -translate-x-1/2 pt-0.5 whitespace-nowrap">
               Última sync: {lastSync || '--:--:--'}
             </span>
           </div>
         </div>
       </header>
 
-      {/* CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0 my-auto">
+      {/* CARDS PRINCIPAIS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 my-auto shrink-0">
         
         {/* RELÓGIO & TIMER */}
         <div 
-          className="bg-white border-2 rounded-2xl p-4 lg:p-5 shadow-md flex flex-col justify-between relative overflow-hidden transition-all duration-500"
+          className="bg-white border-2 rounded-2xl p-6 lg:p-7 shadow-md flex flex-col justify-between h-56 relative overflow-hidden transition-all duration-500"
           style={{ borderColor: clockTheme.border }}
         >
           <div 
@@ -242,20 +244,20 @@ export default function App() {
           />
 
           <div className="relative z-10 flex justify-between items-center border-b border-slate-200/60 pb-2">
-            <span className="text-xs lg:text-sm font-black uppercase tracking-wider text-slate-700">Relógio & Timer da Hora</span>
+            <span className="text-sm font-black uppercase tracking-wider text-slate-700">Relógio & Timer da Hora</span>
             <Clock className="w-6 h-6" style={{ color: clockTheme.accent }} />
           </div>
 
           <div className="relative z-10 flex items-center justify-between my-auto">
-            <div className="text-4xl lg:text-6xl font-mono font-black text-slate-900 tracking-tight leading-none">
+            <div className="text-5xl lg:text-7xl font-mono font-black text-slate-900 tracking-tight leading-none">
               {now.toLocaleTimeString('pt-BR')}
             </div>
             <div 
-              className="px-3 py-2 rounded-2xl flex items-center gap-2 border shadow-sm backdrop-blur-sm transition-colors"
+              className="px-3.5 py-2 rounded-2xl flex items-center gap-2.5 border shadow-sm backdrop-blur-sm transition-colors"
               style={{ backgroundColor: 'white', borderColor: clockTheme.border }}
             >
               <span className="text-xs font-extrabold text-slate-500 uppercase">Falta:</span>
-              <span className="font-mono font-black text-lg lg:text-xl leading-none" style={{ color: clockTheme.accent }}>
+              <span className="font-mono font-black text-lg lg:text-2xl leading-none" style={{ color: clockTheme.accent }}>
                 {String(minutesLeft).padStart(2, '0')}:{String(secondsLeft).padStart(2, '0')}
               </span>
             </div>
@@ -267,47 +269,47 @@ export default function App() {
         </div>
 
         {/* META HORA */}
-        <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 lg:p-5 shadow-md flex flex-col justify-between">
+        <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 lg:p-7 shadow-md flex flex-col justify-between h-56">
           <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-            <span className="text-xs lg:text-sm font-black uppercase tracking-wider text-slate-700">Meta Hora</span>
+            <span className="text-sm font-black uppercase tracking-wider text-slate-700">Meta Hora</span>
             <Target className="w-6 h-6 text-blue-600" />
           </div>
-          <div className="text-4xl lg:text-6xl font-black text-blue-600 my-auto tracking-tight leading-none">
-            {metaHora.toLocaleString('pt-BR')} <span className="text-xl lg:text-2xl font-bold text-slate-400">pacotes</span>
+          <div className="text-5xl lg:text-7xl font-black text-blue-600 my-auto tracking-tight leading-none">
+            {metaHora.toLocaleString('pt-BR')} <span className="text-2xl lg:text-3xl font-bold text-slate-400">pacotes</span>
           </div>
           <p className="text-xs text-slate-600 font-bold">Capacidade / Meta planejada para a hora vigente</p>
         </div>
 
         {/* PROJEÇÃO HORA */}
-        <div className={`bg-white border-2 rounded-2xl p-4 lg:p-5 shadow-md flex flex-col justify-between transition-colors ${
+        <div className={`bg-white border-2 rounded-2xl p-6 lg:p-7 shadow-md flex flex-col justify-between h-56 transition-colors ${
           isProjecaoBoa ? 'border-emerald-400' : 'border-amber-400'
         }`}>
           <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-            <span className="text-xs lg:text-sm font-black uppercase tracking-wider text-slate-700">Projeção Hora</span>
+            <span className="text-sm font-black uppercase tracking-wider text-slate-700">Projeção Hora</span>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 border border-slate-200">
+              <span className="text-xs font-black px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 border border-slate-200">
                 {pacotesPorMinuto.toLocaleString('pt-BR')} pct/min
               </span>
               <TrendingUp className={`w-6 h-6 ${isProjecaoBoa ? 'text-emerald-600' : 'text-amber-500'}`} />
             </div>
           </div>
-          <div className={`text-4xl lg:text-6xl font-black my-auto tracking-tight leading-none ${
+          <div className={`text-5xl lg:text-7xl font-black my-auto tracking-tight leading-none ${
             isProjecaoBoa ? 'text-emerald-600' : 'text-amber-500'
           }`}>
-            {projecaoHora.toLocaleString('pt-BR')} <span className="text-xl lg:text-2xl font-bold text-slate-400">pacotes</span>
+            {projecaoHora.toLocaleString('pt-BR')} <span className="text-2xl lg:text-3xl font-bold text-slate-400">pacotes</span>
           </div>
           <p className="text-xs text-slate-600 font-bold">Ritmo estimado de entrega baseado nos {currentMinute}min decorridos</p>
         </div>
 
         {/* PROCESSADO HORA */}
         <div 
-          className="rounded-2xl p-4 lg:p-5 shadow-md flex flex-col justify-between transition-all duration-500 border-2"
+          className="rounded-2xl p-6 lg:p-7 shadow-md flex flex-col justify-between h-56 transition-all duration-500 border-2"
           style={{ backgroundColor: processadoTheme.bg, borderColor: processadoTheme.border }}
         >
           <div className="flex justify-between items-center border-b border-slate-200/50 pb-2">
-            <span className="text-xs lg:text-sm font-black uppercase tracking-wider text-slate-700">Processado Hora</span>
+            <span className="text-sm font-black uppercase tracking-wider text-slate-700">Processado Hora</span>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black px-2 py-0.5 rounded-lg bg-white/80 text-slate-700 border border-slate-200/80 shadow-xs">
+              <span className="text-xs font-black px-2 py-0.5 rounded-lg bg-white/80 text-slate-700 border border-slate-200/80 shadow-xs">
                 {faltaParaMeta > 0 ? `Falta ${faltaParaMeta.toLocaleString('pt-BR')} pct` : 'Meta batida! 🎉'}
               </span>
               <Package className="w-6 h-6" style={{ color: processadoTheme.text }} />
@@ -315,8 +317,8 @@ export default function App() {
           </div>
           
           <div className="flex items-center justify-between my-auto gap-2">
-            <div className="text-4xl lg:text-6xl font-black tracking-tight leading-none" style={{ color: processadoTheme.text }}>
-              {processadoHora.toLocaleString('pt-BR')} <span className="text-xl lg:text-2xl font-bold text-slate-400">pacotes</span>
+            <div className="text-5xl lg:text-7xl font-black tracking-tight leading-none" style={{ color: processadoTheme.text }}>
+              {processadoHora.toLocaleString('pt-BR')} <span className="text-2xl lg:text-3xl font-bold text-slate-400">pacotes</span>
             </div>
             
             <div 
@@ -337,32 +339,32 @@ export default function App() {
       </div>
 
       {/* TABELA DE ACOMPANHAMENTO */}
-      <div className="bg-white border-2 border-slate-200 rounded-2xl p-3 lg:p-4 shadow-md overflow-x-auto flex-shrink-0">
+      <div className="bg-white border-2 border-slate-200 rounded-2xl p-3 lg:p-4 shadow-md overflow-x-auto shrink-0">
         <h2 className="text-xs lg:text-sm font-black text-slate-800 mb-2 uppercase tracking-wider flex items-center gap-2">
           <span>Acompanhamento por Turno & Hora</span>
         </h2>
 
-        <div className="w-full min-w-[1100px]">
+        <div className="w-full min-w-[1200px]">
           <table className="w-full text-center border-collapse">
             <thead>
               {/* CABEÇALHO DO TURNO */}
               <tr className="border-b border-slate-200 uppercase">
-                <th className="p-1.5 text-left text-slate-700 bg-slate-50 font-black text-xs w-32 min-w-[120px]">TURNO</th>
+                <th className="py-1 px-2 text-left text-slate-700 bg-slate-50 font-black text-[11px] w-32 min-w-[120px]">TURNO</th>
                 {SHIFTS.map(shift => (
-                  <th key={shift.id} colSpan="8" className={`p-1.5 border-x border-slate-200 font-black text-xs lg:text-sm tracking-wide ${shift.headerBg} ${shift.headerText}`}>
+                  <th key={shift.id} colSpan="8" className={`py-1 px-2 border-x border-slate-200 font-black text-xs lg:text-sm tracking-wide ${shift.headerBg} ${shift.headerText}`}>
                     {shift.name}
                   </th>
                 ))}
               </tr>
 
               <tr className="border-b border-slate-200 text-[11px] font-black uppercase">
-                <th className="p-1.5 text-left text-slate-700 bg-slate-50 font-black">HORA</th>
+                <th className="py-1 px-2 text-left text-slate-700 bg-slate-50 font-black">HORA</th>
                 {HOURS_ORDER.map(({ hour }) => {
                   const isCurrent = hour === currentHour;
                   return (
                     <th 
                       key={hour} 
-                      className={`p-1 border-r border-slate-100 ${
+                      className={`py-1 px-1 border-r border-slate-100 ${
                         isCurrent ? 'bg-orange-500 text-white font-black text-xs shadow-sm' : 'text-slate-600 font-bold'
                       }`}
                     >
@@ -375,14 +377,14 @@ export default function App() {
             <tbody>
               {/* METAS */}
               <tr className="border-b border-slate-200 text-[11px] font-black">
-                <td className="p-1.5 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">META</td>
+                <td className="py-1 px-2 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">META</td>
                 {HOURS_ORDER.map(({ hour }) => {
                   const target = realTargets[hour];
                   const isCurrent = hour === currentHour;
                   return (
                     <td 
                       key={hour} 
-                      className={`p-1 border-r border-slate-100 text-[11px] font-black text-slate-700 ${
+                      className={`py-1 px-1 border-r border-slate-100 text-[11px] font-black text-slate-700 ${
                         isCurrent ? 'bg-orange-50 text-orange-600 font-black' : ''
                       }`}
                     >
@@ -394,7 +396,7 @@ export default function App() {
 
               {/* PROCESSADO */}
               <tr className="border-b border-slate-200 text-[11px] font-black">
-                <td className="p-1.5 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">PROCESSADO</td>
+                <td className="py-1 px-2 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">PROCESSADO</td>
                 {HOURS_ORDER.map(({ hour }) => {
                   const val = realProcessed[hour];
                   const target = realTargets[hour] !== undefined ? realTargets[hour] : 6000;
@@ -417,7 +419,7 @@ export default function App() {
                     <td 
                       key={hour} 
                       style={isCurrent ? currentCellStyles : {}}
-                      className={`p-1 border-r border-slate-100 text-[11px] transition-all ${
+                      className={`py-1 px-1 border-r border-slate-100 text-[11px] transition-all ${
                         isCurrent 
                           ? 'font-black text-xs' 
                           : hitTarget 
@@ -435,7 +437,7 @@ export default function App() {
 
               {/* % REALIZADA */}
               <tr className="border-b-2 border-slate-300 text-[11px] font-black">
-                <td className="p-1.5 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">% REALIZADA</td>
+                <td className="py-1 px-2 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">% REALIZADA</td>
                 {HOURS_ORDER.map(({ hour }) => {
                   const val = realProcessed[hour];
                   const target = realTargets[hour] !== undefined ? realTargets[hour] : 6000;
@@ -455,7 +457,7 @@ export default function App() {
                   return (
                     <td 
                       key={hour} 
-                      className={`p-1 border-r border-slate-100 text-[11px] transition-all ${
+                      className={`py-1 px-1 border-r border-slate-100 text-[11px] transition-all ${
                         isCurrent 
                           ? 'bg-orange-50 text-orange-600 font-black' 
                           : hitTarget 
@@ -473,7 +475,7 @@ export default function App() {
 
               {/* RESUMO TOTAL DO TURNO */}
               <tr className="bg-slate-50 text-[11px] font-black border-t-2 border-slate-300">
-                <td className="p-1.5 text-left font-black text-slate-900 bg-slate-200 uppercase tracking-wider">
+                <td className="py-1.5 px-2 text-left font-black text-slate-900 bg-slate-200 uppercase tracking-wider">
                   TOTAL TURNO
                 </td>
                 {SHIFTS.map(shift => {
@@ -481,11 +483,11 @@ export default function App() {
                   const isHit = percent >= 100;
 
                   return (
-                    <td colSpan="8" key={shift.id} className="p-1 border-x border-slate-300 bg-slate-100/80">
+                    <td colSpan="8" key={shift.id} className="py-1 px-2 border-x border-slate-300 bg-slate-100/80">
                       <div className="flex items-center justify-around gap-1 px-1">
                         
                         {/* Meta Turno */}
-                        <div className="flex flex-col items-center gap-0.5">
+                        <div className="flex flex-col items-center gap-0">
                           <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">Meta Turno</span>
                           <span className="text-slate-800 font-black text-xs">{totalTarget.toLocaleString('pt-BR')}</span>
                         </div>
@@ -493,7 +495,7 @@ export default function App() {
                         <div className="h-4 w-px bg-slate-300" />
                         
                         {/* Processado */}
-                        <div className="flex flex-col items-center gap-0.5">
+                        <div className="flex flex-col items-center gap-0">
                           <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">Processado</span>
                           <span className={`font-black text-xs ${
                             hasData && totalProcessed > 0
@@ -509,7 +511,7 @@ export default function App() {
                         <div className="h-4 w-px bg-slate-300" />
                         
                         {/* % Realizada */}
-                        <div className="flex flex-col items-center gap-0.5">
+                        <div className="flex flex-col items-center gap-0">
                           <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">% Realizada</span>
                           <span className={`text-[11px] font-black px-1.5 py-0.5 rounded border ${
                             hasData 
