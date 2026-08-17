@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Clock, Target, TrendingUp, Package, Calendar, RefreshCw } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
@@ -67,74 +67,150 @@ function getClockColor(percent) {
 
 export default function App() {
   const [now, setNow] = useState(new Date());
-  const [realProcessed, setRealProcessed] = useState({});
-  const [realTargets, setRealTargets] = useState({});
+  
+  // Dados dos Cards (Sempre a data operacional de HOJE)
+  const [cardProcessed, setCardProcessed] = useState({});
+  const [cardTargets, setCardTargets] = useState({});
+  
+  // Dados da Tabela (Filtrável por data)
+  const [tableProcessed, setTableProcessed] = useState({});
+  const [tableTargets, setTableTargets] = useState({});
+  
+  // Data selecionada para o filtro da tabela (Padrão: HOJE operacional)
+  const [selectedTableDate, setSelectedTableDate] = useState(() => {
+    const today = new Date();
+    if (today.getHours() < 6) today.setDate(today.getDate() - 1);
+    return getLocalDateString(today);
+  });
+
   const [lastSync, setLastSync] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const dateInputRef = useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const fetchDashboardData = async () => {
-    setIsLoading(true);
+  // 1. Busca Dados em Tempo Real para os CARDS
+  const fetchCardData = async () => {
     try {
       const todayDate = new Date();
-      
       const operationalDate = new Date(todayDate);
       if (todayDate.getHours() < 6) {
         operationalDate.setDate(operationalDate.getDate() - 1);
       }
       const operationalDateStr = getLocalDateString(operationalDate);
 
-      // 1. Produtividade
-      const { data: prodData, error: prodErr } = await supabase
+      // Produtividade Cards
+      const { data: prodData } = await supabase
         .from('hourly_productivity')
         .select('*')
         .eq('date', operationalDateStr);
 
-      if (!prodErr && prodData) {
+      if (prodData) {
         const prodMap = {};
         prodData.forEach(item => {
           let itemHour = parseHourValue(item.hour);
-          if (!isNaN(itemHour)) {
-            prodMap[itemHour] = item.processed_volume;
-          }
+          if (!isNaN(itemHour)) prodMap[itemHour] = item.processed_volume;
         });
-        setRealProcessed(prodMap);
+        setCardProcessed(prodMap);
       }
 
-      // 2. Metas
-      const { data: targetData, error: targetErr } = await supabase
+      // Metas Cards
+      const { data: targetData } = await supabase
         .from('hourly_targets')
         .select('*')
         .eq('date', operationalDateStr);
 
-      if (!targetErr && targetData) {
+      if (targetData) {
         const targetMap = {};
         targetData.forEach(item => {
           let itemHour = parseHourValue(item.hour);
-          if (!isNaN(itemHour)) {
-            targetMap[itemHour] = item.target_volume;
-          }
+          if (!isNaN(itemHour)) targetMap[itemHour] = item.target_volume;
         });
-        setRealTargets(targetMap);
+        setCardTargets(targetMap);
       }
 
-      setLastSync(new Date().toLocaleTimeString('pt-BR'));
+      // Buscar a última atualização (updated_at) no banco
+      const { data: lastUpdateData } = await supabase
+        .from('hourly_productivity')
+        .select('updated_at')
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      if (lastUpdateData && lastUpdateData.length > 0 && lastUpdateData[0].updated_at) {
+        const rawStr = String(lastUpdateData[0].updated_at).trim();
+
+        // Extrai diretamente a hora HH:MM:SS da string bruta para evitar alterações de fuso fuso/UTC
+        const timeMatch = rawStr.match(/(\d{2}):(\d{2}):(\d{2})/);
+        if (timeMatch) {
+          setLastSync(`${timeMatch[1]}:${timeMatch[2]}:${timeMatch[3]}`);
+        } else {
+          setLastSync(rawStr);
+        }
+      }
     } catch (err) {
-      console.error("Erro ao buscar dados no Supabase:", err);
+      console.error("Erro ao carregar dados dos cards:", err);
+    }
+  };
+
+  // 2. Busca Dados para a TABELA com base na data do filtro
+  const fetchTableData = async (dateStr) => {
+    setIsLoading(true);
+    try {
+      // Produtividade Tabela
+      const { data: prodData } = await supabase
+        .from('hourly_productivity')
+        .select('*')
+        .eq('date', dateStr);
+
+      const prodMap = {};
+      if (prodData) {
+        prodData.forEach(item => {
+          let itemHour = parseHourValue(item.hour);
+          if (!isNaN(itemHour)) prodMap[itemHour] = item.processed_volume;
+        });
+      }
+      setTableProcessed(prodMap);
+
+      // Metas Tabela
+      const { data: targetData } = await supabase
+        .from('hourly_targets')
+        .select('*')
+        .eq('date', dateStr);
+
+      const targetMap = {};
+      if (targetData) {
+        targetData.forEach(item => {
+          let itemHour = parseHourValue(item.hour);
+          if (!isNaN(itemHour)) targetMap[itemHour] = item.target_volume;
+        });
+      }
+      setTableTargets(targetMap);
+
+    } catch (err) {
+      console.error("Erro ao carregar dados da tabela:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Atualização Global
+  const handleRefreshAll = async () => {
+    await fetchCardData();
+    await fetchTableData(selectedTableDate);
+  };
+
   useEffect(() => {
-    fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 60000);
+    fetchCardData();
+    const interval = setInterval(fetchCardData, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    fetchTableData(selectedTableDate);
+  }, [selectedTableDate]);
 
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
@@ -143,16 +219,20 @@ export default function App() {
   const minutesLeft = 59 - currentMinute;
   const secondsLeft = 59 - currentSecond;
 
-  const weekdayStr = now.toLocaleDateString('pt-BR', { weekday: 'long' });
+  // Formatação para exibição no Card de Data
+  const [yearSel, monthSel, daySel] = selectedTableDate.split('-');
+  const displayDateObj = new Date(parseInt(yearSel), parseInt(monthSel) - 1, parseInt(daySel));
+  const weekdayStr = displayDateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
   const weekdayFormatted = weekdayStr.charAt(0).toUpperCase() + weekdayStr.slice(1);
-  const dateFormatted = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const dateFormatted = `${daySel}/${monthSel}/${yearSel}`;
   const fullHeaderDate = `${weekdayFormatted} - ${dateFormatted}`;
 
   const timeProgressPercent = ((currentMinute * 60 + currentSecond) / 3600) * 100;
   const clockTheme = getClockColor(timeProgressPercent);
 
-  const metaHora = realTargets[currentHour] !== undefined ? realTargets[currentHour] : 6000;
-  const processadoHora = realProcessed[currentHour] || 0;
+  // Valores para os Cards (Horário real atual)
+  const metaHora = cardTargets[currentHour] !== undefined ? cardTargets[currentHour] : 6000;
+  const processadoHora = cardProcessed[currentHour] || 0;
 
   const elapsedMinutes = currentMinute === 0 ? 1 : currentMinute;
   const projecaoHora = Math.round((processadoHora / elapsedMinutes) * 60);
@@ -164,18 +244,18 @@ export default function App() {
   const processadoTheme = getPerformanceColor(metaPercent);
   const isProjecaoBoa = projecaoHora >= metaHora;
 
-  // Cálculo dos Totais por Turno
+  // Totais do Turno para a Tabela
   const getShiftTotals = (shiftHours) => {
     let totalTarget = 0;
     let totalProcessed = 0;
     let hasData = false;
 
     shiftHours.forEach(h => {
-      if (realTargets[h] !== undefined) {
-        totalTarget += realTargets[h];
+      if (tableTargets[h] !== undefined) {
+        totalTarget += tableTargets[h];
       }
-      if (realProcessed[h] !== undefined) {
-        totalProcessed += realProcessed[h];
+      if (tableProcessed[h] !== undefined) {
+        totalProcessed += tableProcessed[h];
         hasData = true;
       }
     });
@@ -187,7 +267,7 @@ export default function App() {
   return (
     <div className="h-screen max-h-screen overflow-hidden bg-slate-100 text-slate-800 p-3 lg:p-4 flex flex-col justify-between select-none gap-3">
       
-      {/* CABEÇALHO COM PADDING E ALINHAMENTO PERFEITO */}
+      {/* CABEÇALHO COM FILTRO DE DATA INTERATIVO */}
       <header className="flex flex-wrap gap-2 justify-between items-center bg-white px-4 pt-3 pb-3.5 rounded-2xl border border-slate-200 shadow-sm shrink-0">
         <div className="flex items-center gap-3">
           <div className="bg-orange-500 text-white p-2.5 rounded-2xl shadow-md">
@@ -204,18 +284,29 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-3 ml-auto">
-          {/* CARD DE DATA */}
-          <div className="bg-slate-50 border border-slate-200 px-4 h-11 rounded-2xl flex items-center gap-2 shadow-sm">
-            <Calendar className="w-4 h-4 text-orange-500" />
-            <span className="text-xs lg:text-sm font-black text-slate-800 tracking-wide whitespace-nowrap">
+          {/* CARD DE SELEÇÃO DE DATA COM FILTRO */}
+          <div 
+            onClick={() => dateInputRef.current && dateInputRef.current.showPicker?.()}
+            className="relative bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 h-11 rounded-2xl flex items-center gap-2 shadow-sm cursor-pointer transition-all"
+            title="Clique para alterar a data da tabela"
+          >
+            <Calendar className="w-4 h-4 text-orange-500 pointer-events-none" />
+            <span className="text-xs lg:text-sm font-black text-slate-800 tracking-wide whitespace-nowrap pointer-events-none">
               {fullHeaderDate}
             </span>
+            <input 
+              ref={dateInputRef}
+              type="date"
+              value={selectedTableDate}
+              onChange={(e) => e.target.value && setSelectedTableDate(e.target.value)}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            />
           </div>
 
-          {/* ÁREA DO BOTÃO ATUALIZAR + ÚLTIMA SYNC */}
+          {/* BOTÃO ATUALIZAR + ÚLTIMA SYNC (DO BANCO) */}
           <div className="relative flex flex-col items-center">
             <button
-              onClick={fetchDashboardData}
+              onClick={handleRefreshAll}
               disabled={isLoading}
               className="bg-orange-500 hover:bg-orange-600 active:scale-95 transition-all text-white font-black px-4 h-11 rounded-2xl shadow-md flex items-center justify-center gap-2 text-xs lg:text-sm uppercase tracking-wider cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               title="Atualizar dados manualmente"
@@ -230,7 +321,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* CARDS PRINCIPAIS */}
+      {/* CARDS PRINCIPAIS (INVARIÁVEIS - SOMENTE TEMPO REAL) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 my-auto shrink-0">
         
         {/* RELÓGIO & TIMER */}
@@ -338,10 +429,13 @@ export default function App() {
 
       </div>
 
-      {/* TABELA DE ACOMPANHAMENTO */}
+      {/* TABELA DE ACOMPANHAMENTO (RESPONDE AO FILTRO DE DATA) */}
       <div className="bg-white border-2 border-slate-200 rounded-2xl p-3 lg:p-4 shadow-md overflow-x-auto shrink-0">
-        <h2 className="text-xs lg:text-sm font-black text-slate-800 mb-2 uppercase tracking-wider flex items-center gap-2">
+        <h2 className="text-xs lg:text-sm font-black text-slate-800 mb-2 uppercase tracking-wider flex items-center justify-between">
           <span>Acompanhamento por Turno & Hora</span>
+          <span className="text-[11px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200">
+            Exibindo dados de: {dateFormatted}
+          </span>
         </h2>
 
         <div className="w-full min-w-[1200px]">
@@ -379,7 +473,7 @@ export default function App() {
               <tr className="border-b border-slate-200 text-[11px] font-black">
                 <td className="py-1 px-2 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">META</td>
                 {HOURS_ORDER.map(({ hour }) => {
-                  const target = realTargets[hour];
+                  const target = tableTargets[hour];
                   const isCurrent = hour === currentHour;
                   return (
                     <td 
@@ -398,8 +492,8 @@ export default function App() {
               <tr className="border-b border-slate-200 text-[11px] font-black">
                 <td className="py-1 px-2 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">PROCESSADO</td>
                 {HOURS_ORDER.map(({ hour }) => {
-                  const val = realProcessed[hour];
-                  const target = realTargets[hour] !== undefined ? realTargets[hour] : 6000;
+                  const val = tableProcessed[hour];
+                  const target = tableTargets[hour] !== undefined ? tableTargets[hour] : 6000;
                   const isCurrent = hour === currentHour;
                   const hasProcessed = val !== undefined;
                   const hitTarget = hasProcessed && val >= target;
@@ -439,8 +533,8 @@ export default function App() {
               <tr className="border-b-2 border-slate-300 text-[11px] font-black">
                 <td className="py-1 px-2 text-left font-black text-slate-700 bg-slate-50 whitespace-nowrap">% REALIZADA</td>
                 {HOURS_ORDER.map(({ hour }) => {
-                  const val = realProcessed[hour];
-                  const target = realTargets[hour] !== undefined ? realTargets[hour] : 6000;
+                  const val = tableProcessed[hour];
+                  const target = tableTargets[hour] !== undefined ? tableTargets[hour] : 6000;
                   const isCurrent = hour === currentHour;
                   const hasValue = val !== undefined;
 
