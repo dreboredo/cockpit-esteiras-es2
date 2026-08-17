@@ -265,7 +265,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen max-h-screen overflow-hidden bg-slate-100 text-slate-800 p-3 lg:p-4 flex flex-col justify-between select-none gap-3">
+    <div className="min-h-screen bg-slate-100 text-slate-800 p-3 lg:p-4 flex flex-col justify-between select-none gap-3 overflow-y-auto">
       
       {/* CABEÇALHO COM FILTRO DE DATA INTERATIVO */}
       <header className="flex flex-wrap gap-2 justify-between items-center bg-white px-4 pt-3 pb-3.5 rounded-2xl border border-slate-200 shadow-sm shrink-0">
